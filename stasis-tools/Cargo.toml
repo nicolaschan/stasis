@@ -5,4 +5,12 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1.0"
+clap = { version = "4.5.36", features = ["derive"] }
 qapi = { version = "0.15", features = ["qapi-qga", "qapi-qmp"] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+
+[dev-dependencies]
+serial_test = "3.2.0"
+tempfile = "3.19.1"
+tracing-test = "0.2.5"

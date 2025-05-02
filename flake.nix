@@ -16,7 +16,6 @@
   }:
     flake-utils.lib.eachDefaultSystem (system: let
       pkgs = nixpkgs.legacyPackages.${system};
-      startVmScript = builtins.readFile ./startvm.sh;
       stasisTools = stasis-tools.packages.${system}.default;
       nixosNixImage = pkgs.dockerTools.pullImage {
         imageName = "nixos/nix";
@@ -24,6 +23,9 @@
         hash = "sha256-GP/kgRTFISRnF+pYd9dgufl/M1U9BVi/aUJzgXaPzdc=";
         finalImageName = "nixos/nix";
         finalImageTag = "latest";
+      };
+      stasisEntrypoint = pkgs.callPackage ./stasis-entrypoint.nix {
+        inherit stasisTools;
       };
     in {
       devShells = {
@@ -35,6 +37,8 @@
         };
       };
 
+      inherit stasisEntrypoint;
+
       image = pkgs.dockerTools.buildImage {
         name = "qemu-image";
         tag = "latest";
@@ -42,14 +46,12 @@
         fromImage = nixosNixImage;
 
         copyToRoot = [
-          pkgs.qemu_full
+          pkgs.qemu_kvm
           pkgs.busybox
           pkgs.coreutils
-          pkgs.htop
           pkgs.bash
-          pkgs.fish
           pkgs.socat
-          (pkgs.writeScriptBin "startvm" startVmScript)
+          stasisEntrypoint
           stasisTools
           (pkgs.runCommand "nix-scripts" {} ''
             mkdir -p $out/app
@@ -62,10 +64,10 @@
         ];
 
         config = {
-          Cmd = ["startvm"];
+          WorkingDir = "/app";
+          Entrypoint = ["/bin/stasis-entrypoint"];
           Env = [
             "NIX_CONFIG=experimental-features = nix-command flakes"
-            "PATH=/bin:/root/.nix-profile/bin:/nix/var/nix/profiles/default/bin:/nix/var/nix/profiles/default/sbin"
           ];
         };
       };
@@ -81,8 +83,9 @@
       };
 
       packages = {
-        qcow2 = self.nixosConfigurations.${system}.vm.config.system.build.qcow2;
+        vm = self.nixosConfigurations.${system}.vm.config.system.build.qcow2;
         image = self.image.${system};
+        default = self.stasisEntrypoint.${system};
         all = pkgs.runCommand "all-outputs" {} ''
           mkdir -p $out/images
           cp -L ${self.image.${system}} $out/images/qemu-image.tar.gz
