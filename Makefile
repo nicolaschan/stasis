@@ -4,7 +4,7 @@ all: build
 
 # outputs
 BUILD_DIR := build
-QEMU_IMAGE := $(BUILD_DIR)/qemu-image
+QEMU_IMAGE := $(BUILD_DIR)/stasis-image
 VM_QCOW2 := $(BUILD_DIR)/app.qcow2
 
 # sources
@@ -15,8 +15,8 @@ SH_FILES := $(shell find . -name "*.sh" -type f)
 RUST_FILES := $(shell find . -name "*.rs" -type f)
 
 # docker config
-IMAGE_NAME := qemu-image:latest
-CONTAINER_NAME := qemu-container
+IMAGE_NAME := nicolaschan/stasis:latest
+CONTAINER_NAME := stasis-container
 
 $(QEMU_IMAGE): $(FLAKE_FILE) $(FLAKE_LOCK) $(NIX_FILES) $(SH_FILES) $(RUST_FILES)
 	nix build .#image
@@ -44,7 +44,7 @@ load: build
 run: stop build load
 	docker run --privileged --rm -d \
 		-p 2222:2222 \
-		-p 25560:25560 \
+		-p 25560:25566 \
 		-v $(PWD)/$(BUILD_DIR):/app/build \
 		--name $(CONTAINER_NAME) \
 		$(IMAGE_NAME)
@@ -52,7 +52,7 @@ run: stop build load
 run-build: load
 	docker run --privileged --rm -d \
 		-p 2222:2222 \
-		-p 25560:25560 \
+		-p 25560:25566 \
 		-e "STASIS_AUTO_BUILD_IMAGE=true" \
 		--name $(CONTAINER_NAME) \
 		$(IMAGE_NAME)

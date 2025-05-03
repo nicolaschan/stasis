@@ -24,8 +24,12 @@
         finalImageName = "nixos/nix";
         finalImageTag = "latest";
       };
+      stasisResume = pkgs.callPackage ./stasis-resume.nix {
+        inherit stasisTools;
+      };
       stasisEntrypoint = pkgs.callPackage ./stasis-entrypoint.nix {
         inherit stasisTools;
+        inherit stasisResume;
       };
     in {
       devShells = {
@@ -37,10 +41,10 @@
         };
       };
 
-      inherit stasisEntrypoint;
+      inherit stasisResume;
 
       image = pkgs.dockerTools.buildImage {
-        name = "qemu-image";
+        name = "nicolaschan/stasis";
         tag = "latest";
 
         fromImage = nixosNixImage;
@@ -51,6 +55,8 @@
           pkgs.coreutils
           pkgs.bash
           pkgs.socat
+          pkgs.sshpass
+          stasisResume
           stasisEntrypoint
           stasisTools
           (pkgs.runCommand "nix-scripts" {} ''

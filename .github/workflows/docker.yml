@@ -25,5 +25,5 @@ jobs:
     - name: Push image
       run: |
         docker load < build/qemu-image
-        docker tag qemu-image:latest ghcr.io/nicolaschan/stasis:latest
+        docker tag nicolaschan/stasis:latest ghcr.io/nicolaschan/stasis:latest
         docker push ghcr.io/nicolaschan/stasis:latest

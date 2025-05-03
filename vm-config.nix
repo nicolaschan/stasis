@@ -15,7 +15,7 @@
     isNormalUser = true;
     initialPassword = "nixos";
     extraGroups = ["wheel" "docker"];
-    packages = [pkgs.neovim];
+    packages = [pkgs.busybox];
   };
 
   # Enable SSH for remote access
@@ -25,6 +25,12 @@
 
   # Set hostname
   networking.hostName = "nixos-vm";
+
+  nix = {
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
+  };
 
   # Bootloader configuration
   boot.loader.timeout = 5; # seconds
